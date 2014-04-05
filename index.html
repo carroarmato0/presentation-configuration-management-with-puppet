@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Configuration Management with Puppet</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/puppet-logo2.png" alt="Puppet" />
+					<h1>Configuration Management</h1>
+					<h3>With Puppet</h3>
+          <p>
+            <small>
+              Created by <a href="http://carroarmato0.be">Christophe Vanlancker</a> / <a href="http://twitter.com/carroarmato0">@carroarmato0</a>
+            </small>
+          </p>
+				</section>
+
+        <section>
+          <h2>Who</h2>
+          <img src='files/me.jpeg' alt='Me' />
+          <ul>
+            <li>Christophe Vanlancker</li>
+            <li>Senior Junior Sysadmin &amp; Open Source Consultant at Inuits</li>
+            <li>Internal operations and maintainer Mediasalsa</li>
+          </ul>
+        </section>
+
+        <section>
+        	<section>
+	          <h2>What</h2>
+	          <ul>
+	            <li>Maintain 131+ machines (internally)</li>
+	            <li>Monitoring</li>
+	            <li>Metrics</li>
+	            <li>Updates</li>
+	            <li>Configuration</li>
+	          </ul>
+        	</section>
+
+        	<section>
+        		<p class='fragment'>I am not alone...</p>
+        	</section>
+
+        	<section>
+        		<p>Many colleagues</p>
+        		<p>Many changes</p>
+        	</section>
+
+					<section>
+						<h3>Fundamental Questions:</h3>
+        		<ul>
+        			<li>Who did what?</li>
+        			<li>What has changed?</li>
+        			<li>What were the previous configurations?</li>
+        	 </ul>
+           <img style="background-color: none; background: none; box-shadow: none; border: none; padding-top: 50px; display: block; margin: 0px auto;" src='files/developermodel.gif' alt='Not Devops' />
+        	</section>
+        </section>
+
+        <section>
+        	<h2>Past</h2>
+        	<ul>
+        		<li>Complex, expensive, machines</li>
+        		<li>Slow changes</li>
+        		<li>In-Depth documentation</li>
+        	</ul>
+          <img style="background-color: none; background: none; box-shadow: none; border: none; padding-top: 50px; display: block; margin: 0px auto;" src='files/documentation.gif' alt='Documentation' />
+	       </section>
+
+      	<section>
+      		<section>
+	      		<h2>Present</h2>
+	      		<ul>
+	      			<li>Virtualization</li>
+	      			<li>Many many machines</li>
+	      			<li>Dynamic Environments</li>
+	      			<li>Lot of changes</li>
+	      		</ul>
+	      	</section>
+
+	      	<section>
+	      		<h2>Present Types of Deployments</h2>
+	      		<h3>Manual changes</h3>
+	      		<ul>
+	      			<li>Repetitive</li>
+	      			<li>Time Consuming</li>
+	      			<li>Error prone</li>
+	      			<li>Inconsistency risk</li>
+	      			<li>Documentation need be kept up-to-date</li>
+              <li>Disaster? HF, hope docs are up to date and backups are working</li>
+	      		</ul>
+	      	</section>
+
+          <section>
+            <h2>Present Types of Deployments</h2>
+            <h3>Golden Image</h3>
+            <ul>
+              <li>Define state of machine and distribute</li>
+              <li>Static ?</li>
+              <li>Change means recreating image and redistribution</li>
+              <li>Prevent people from monkeying around?</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Present Types of Deployments</h2>
+            <h3>Shady Wannabe</h3>
+            <ul>
+              <li>No shared knowledge</li>
+              <li>Insane solution</li>
+              <li>Shady documentation</li>
+              <li>No community</li>
+              <li>Possibly proprietary</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Enter Configuration Management</h2>
+            <small>aka cfgmgmt</small>
+          </section>
+      	</section>
+
+        <section>
+          <section>
+            <h2>Configuration Management</h2>
+            <blockquote>
+              Systems engineering process for establishing and maintaining consistency of a product's performance, functional and physical attributes with its requirements, design and operational information throughout its life.
+            </blockquote>
+          </section>
+
+          <section>
+            <h2>Configuration Management</h2>
+            <ol>
+              <li>Configuration Identification</li>
+              <li>Configuration Control</li>
+              <li>Configuration Status Accounting</li>
+              <li>Configuration Audits</li>
+            </ol>
+          </section>
+
+          <section>
+            <p>To put it more simply:</p>
+           <img style="background-color: none; background: none; box-shadow: none; border: none; padding-top: 50px; display: block; margin: 0px auto;" src='files/change.gif' alt='Cfgmgmt' />
+          </section>
+
+          <section>
+            <p>Idempotence (/ˌaɪdɨmˈpoʊtəns/ eye-dəm-poh-təns)</p>
+          </section>
+
+          <section>
+            <h2>Configuration Management</h2>
+            <h3>Tools of trade</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/puppet-logo.png" alt="Puppet" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/chef-logo.jpg" alt="Chef" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/cfengine-logo.jpg" alt="Cf-Engine" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/saltstack-logo.jpg" alt="Salt" />
+            <p>and many others...</p>
+          </section>
+
+        </section>
+
+        <section>
+
+          <section>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/puppet-logo2.png" alt="Puppet" />
+            <h2>Puppet</h2>
+            <ul>
+              <li>2005</li>
+              <li>Ruby + Ruby DSL</li>
+              <li>Unix-like and Windows</li>
+              <li>Declarative</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Resources</h3>
+            <ul>
+              <li>User account</li>
+              <li>Specific file</li>
+              <li>Directory of files</li>
+              <li>Software Package</li>
+              <li>Running Service</li>
+              <li>Scheduled Cron Job</li>
+              <li>Invocation of a shell command</li>
+              <li>...</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Resources - types</h3>
+            <pre><code data-trim>
+Type ->       user { 'dave':                <- Title
+                ensure     => present,
+Attribute ->    uid        => '507',        <- Value
+                gid        => 'admin',
+                shell      => '/bin/zsh',
+                home       => '/home/dave',
+                managehome => true,
+              }
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Resources - types</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/puppet-types.png" alt="Puppet Types" />
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <ul>
+              <li>Manifests:&nbsp;&nbsp;&nbsp;resource declarations</li>
+              <li>Modules:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bundle of manifests with a specific purpose</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <p>Modules can be found on the Forge (https://forge.puppetlabs.com/‎)</p>
+            <p>But github is the place to be</p>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <pre><code data-trim>
+├── manifests
+│   ├── hosts
+│   |   └── example.pp
+│   └── site.pp
+└── modules
+    └── ntp
+        ├── manifests
+        │   ├── config.pp
+        │   ├── init.pp
+        │   ├── install.pp
+        │   ├── params.pp
+        │   └── service.pp
+        └── templates
+            ├── ntp.conf.archlinux.erb
+            ├── ntp.conf.debian.erb
+            ├── ntp.conf.el.erb
+            ├── ntp.conf.freebsd.erb
+            ├── ntp.conf.gentoo.erb
+            └── ntp.conf.suse.erb
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/compilation.png" alt="Puppet Compilation" />
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/state.png" alt="Puppet State" />
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Facter</h3>
+            <pre><code data-trim>
+[carroarmato0:~] $ facter -p
+architecture => amd64
+augeasversion => 1.1.0
+blockdevice_sda_model => LITEONIT LCT-256
+blockdevice_sda_size => 256060514304
+blockdevice_sda_vendor => ATA
+blockdevice_sr0_model => DVD+-RW UJ8B2
+blockdevice_sr0_size => 1073741312
+blockdevice_sr0_vendor => MATSHITA
+blockdevices => sda,sr0
+facterversion => 1.7.0
+filesystems => ext2,ext3,ext4,vfat
+hardwareisa => x86_64
+hardwaremodel => x86_64
+hostname => neon-flower
+id => carroarmato0
+interfaces => eth0,lo,wlan0
+ipaddress => 127.0.1.1
+ipaddress_lo => 127.0.0.1
+is_virtual => false
+kernel => Linux
+kernelmajversion => 3.11
+kernelrelease => 3.11.0-15-generic
+kernelversion => 3.11.0
+lsbdistcodename => saucy
+lsbdistdescription => Ubuntu 13.10
+lsbdistid => Ubuntu
+lsbdistrelease => 13.10
+lsbmajdistrelease => 13
+macaddress => d4:be:d9:68:25:73
+macaddress_eth0 => d4:be:d9:68:25:73
+macaddress_wlan0 => 60:67:20:7c:26:98
+memoryfree => 6.69 GB
+memoryfree_mb => 6851.83
+memorysize => 7.75 GB
+memorysize_mb => 7936.18
+memorytotal => 7.75 GB
+mtu_eth0 => 1500
+mtu_lo => 65536
+mtu_wlan0 => 1500
+netmask_lo => 255.0.0.0
+network_lo => 127.0.0.0
+operatingsystem => Ubuntu
+operatingsystemrelease => 13.10
+osfamily => Debian
+rvm/bin
+physicalprocessorcount => 1
+processor0 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor1 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor2 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor3 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor4 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor5 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor6 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processor7 => Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+processorcount => 8
+ps => ps -ef
+puppetversion => 3.2.4
+rubysitedir => /usr/local/lib/site_ruby/1.9.1
+rubyversion => 1.9.3
+selinux => false
+swapfree => 7.95 GB
+swapfree_mb => 8144.00
+swapsize => 7.95 GB
+swapsize_mb => 8144.00
+timezone => CET
+uniqueid => 007f0101
+uptime => 0:16 hours
+uptime_days => 0
+uptime_hours => 0
+uptime_seconds => 1014
+virtual => physical
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>module/virtinstall</h3>
+            <pre><code data-trim>
+Virtinstall::Bootstrap {
+  ensure               => 'present',
+  bootstrap_method     => 'kickstart',
+  vm_netbridge         => hiera('kvm_bridge'),
+  vm_netmask           => hiera('br0_netmask'),
+  vm_gateway           => $::ipaddress_br0,
+  vm_nameserver        => hiera('nameserver'),
+  vm_domain            => hiera('vm_default_domain', 'internal.inuits.eu'),
+  vm_os_name           => 'centos',
+  vm_os_version        => '6',
+  vm_ram               => hiera('vm_default_ram_size', '1024'),
+  vm_lvm_lv_size       => hiera('vm_default_lv_size', '10g'),
+  vm_lvm_vg_name       => hiera('vm_default_vg_name', "vg_${::hostname}"),
+  datacenter           => $::datacenter,
+  plannedenvironment   => hiera('vm_environment', 'production'),
+  bootstrap_url_mirror => 'http://pulp2.internal.inuits.eu/pulp/repos/pub/centos/6/os/x86_64/',
+  bootstrap_baseurl    => "http://${::ipaddress_br0}/bootstrap",
+  tag                  => 'vms',
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>module/virtinstall preseed Debian</h3>
+            <pre><code data-trim>
+virtinstall::bootstrap{'mediasalsa01.infradev.mediasalsa.eu':
+  vm_ipaddress         => '10.0.49.11',
+  vm_vcpus             => '2',
+  vm_ram               => '4096',
+  vm_os_name           => 'debian',
+  bootstrap_method     => 'preseed',
+  bootstrap_url_mirror => 'http://ftp.be.debian.org/debian/dists/squeeze/main/installer-amd64',
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>module/virtinstall preseed Debian</h3>
+            <pre><code data-trim>
+#### Squeeze preseed file
+
+### Localization
+d-i debian-installer/locale string <%= vm_locale %>
+d-i console-keymaps-at/keymap select <%= vm_keymap %>
+
+### Network configuration
+d-i netcfg/choose_interface select <%= bootstrap_device %>
+d-i netcfg/disable_dhcp boolean true
+d-i netcfg/confirm_static boolean true
+d-i netcfg/get_hostname string <%= vm_hostname %>
+d-i netcfg/get_domain string <%= vm_domain %>
+d-i netcfg/get_ipaddress string <%= vm_ipaddress %>
+d-i netcfg/get_netmask string <%= vm_netmask %>
+d-i netcfg/get_gateway string <%= vm_gateway %>
+d-i netcfg/get_nameservers string <%= vm_nameserver %>
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>module/virtinstall run</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/clean.png" alt="Puppet Clean Run" />
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Environments</h3>
+            <p>Different Environment = Different Puppet code</p>
+            <p class='fragment'>or</p>
+            <p class='fragment'>Different $customer = Different Repository...</p>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Environments</h3>
+            <h4>On the clients</h4>
+            <p>/etc/puppet/puppet.conf</p>
+            <pre><code data-trim>
+...
+environment = production
+...
+            </code></pre>
+            <pre><code data-trim>
+...
+environment = development
+...
+            </code></pre>
+            <h4>On the Master</h4>
+            <pre><code data-trim>
+manifest   = \$confdir/environments/\$environment/manifests/site.pp
+modulepath = \$confdir/environments/\$environment/modules
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Exported Resources</h3>
+            <br>
+            <h4>(Local) Resource</h4>
+            <hr>
+            <pre><code data-trim>
+user { 'steve': home => '/home/steve' }
+            </code></pre>
+            <br>
+            <h4>Exported Resource</h4>
+            <hr>
+            <pre><code data-trim>
+@@user { 'steve': home => '/home/steve' }
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Exported Resources</h3>
+            <pre><code data-trim>
+@@nagios_host { $fqdn: ....}
+            </code></pre>
+
+            <pre><code data-trim>
+Nagios_host <<| |>>              { notify => Service[$::icinga::service_server] }
+Nagios_service <<| |>>           { notify => Service[$::icinga::service_server] }
+Nagios_hostextinfo <<| |>>       { notify => Service[$::icinga::service_server] }
+Nagios_command <<| |>>           { notify => Service[$::icinga::service_server] }
+Nagios_contact <<| |>>           { notify => Service[$::icinga::service_server] }
+Nagios_contactgroup <<| |>>      { notify => Service[$::icinga::service_server] }
+Nagios_hostdependency <<| |>>    { notify => Service[$::icinga::service_server] }
+Nagios_hostescalation <<| |>>    { notify => Service[$::icinga::service_server] }
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Exported Resources with tags</h3>
+            <h4>Exporter</h4>
+            <pre><code data-trim>
+@@apache_vhost {'mysite.example.org':
+  ...
+  tag => 'hypervisor02.example.org',
+}
+            </code></pre>
+
+            <h4>Collector</h4>
+            <pre><code data-trim>
+node 'hypervisor02.example.org' {
+
+  Apache::Vhost     <<| tag == $::fqdn |>> {}
+
+  ...
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>Exported Resources</h3>
+
+            <p>In the past stored in DB (mysql/mariadb)</p>
+            <p>Intensive for massive collectors (monitoring, central backup, ...)</p>
+            <p>Introduction of PuppetDB</p>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>PuppetDB</h3>
+
+            <p>PuppetDB collects data generated by Puppet.</p>
+            <p>It enables advanced Puppet features like the inventory service and exported resources, and can be the foundation for other applications that use Puppet’s data.</p>
+          </section>
+
+          <section>
+            <h2>Puppet</h2>
+            <h3>PuppetDB</h3>
+            <h4>Before / After</h4>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/puppetdb.png" alt="PuppetDB" />
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <h2>Hiera</h2>
+            <p><small>Variable lookup</small></p>
+            <p><small>Data and code separation</small></p>
+          </section>
+
+          <section>
+            <h2>Hiera</h2>
+            <pre><code data-trim>
+---
+eth0_ipaddr: '10.0.33.3'
+mysql_stats_user: 'someuser'
+mysql_stats_pw: 'somepassword'
+serveraliases:
+- 'www.mywebsite.nl'
+- 'mywebsite.nl'
+- 'www.yetanotherwebsite.nl'
+- 'yetanotherwebsite.nl'
+- 'www.ithinkyougotthis.nl'
+- 'ithinkyougotthis.nl'
+mysql_root_pass: 'WoudntYouLikeToKnow'
+mysql_site_pass: 'nOt7oDaY'
+mysite_sitename: 'My Site Production'
+mysite_siteroot: '/var/vhosts/mysite.nl/htdocs/'
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Hiera</h2>
+            <pre><code data-trim>
+node /mysite/ {
+
+  ########################################
+  # BEWARE, changes here have effect on: #
+  #      mysite  and  mysite-staging     #
+  ########################################
+
+  $mysite_vhost_name  = hiera('mysite_vhost_name')
+  $mysite_siteroot    = hiera('mysite_siteroot')
+  $mysite_cron_url    = hiera('mysite_cron_url')
+  $mysite_cron_key    = hiera('mysite_cron_key')
+  $mysql_site_pass    = hiera('mysql_mysite_pass')
+  $server_aliases     = hiera('serveraliases')
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Hiera</h2>
+            <pre><code data-trim>
+include drupal7
+drupal7::config { $mysite_vhost_name:
+  drupal_sitename   => hiera('mysite_sitename'),
+  siteroot          => $mysite_siteroot,
+  config_basepath   => hiera('mysite_config_basepath'),
+  database_host     => '127.0.0.1',
+  database_name     => 'mysite',
+  database_user     => 'mysite',
+  database_password => $mysql_site_pass,
+  dedicated_cron    => true,
+  is_multidomain    => true,
+  environment       => hiera('drupal_environment', 'production'),
+  cronkey           => $mysite_cron_key,
+  cron_url          => $mysite_cron_url,
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Hiera</h2>
+            <h3>Lookup hierarchy</h3>
+            <pre><code data-trim>
+---
+:backends:
+  - yaml
+
+:logger: console
+
+:hierarchy:
+  - clients/%{environment}/%{hostname}
+  - hypervisors/%{hypervisor}
+  - hypervisors/common
+  - locations/%{datacenter}
+  - environments/%{environment}
+  - ostype/%{operatingsystem}
+  - common
+
+:yaml:
+  :datadir: /etc/puppet/hieradata
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Puppet Roles + Hiera</h2>
+            <pre><code data-trim>
+node /www/ {
+
+  include apache
+  include ntp
+  include php
+  ...
+
+}
+            </code></pre>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/new-host.gif' alt='New Host' />
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/foreman_large.png" alt="Foreman" />
+          </section>
+
+          <section>
+            <h2>Foreman</h2>
+            <ul>
+              <li>Complete lifecycle management tool for physical and virtual servers</li>
+              <li>Paul Kelly and Ohad Levy (2009)</li>
+              <li>From simple central Puppet Report overview to automated deployment (not limited to Puppet!)</li>
+              <li>Multitenancy</li>
+              <li>Internal auth / Ldap</li>
+              <li>API</li>
+              <li>Smart-Proxy </li>
+            </ul>
+          </section>
+
+          <section>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/host_listing.png" alt="Foreman Hosts" />
+          </section>
+
+          <section>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/reportview.png" alt="Foreman Report View" />
+          </section>
+
+          <section>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/Foreman+LXC.png" alt="Foreman LXC" />
+          </section>
+
+          <section>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/hosteditpage.png" alt="Foreman Edit Host" />
+          </section>
+
+          <section>
+            <h2>Foreman</h2>
+            <p>Provision on bare metal and cloud</p>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/aws_logo.png" alt="AWS EC2" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/google_compute_engine.png" alt="Google Compute Engine" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/libvirtLogo.png" alt="LibVirt" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/openstack.png" alt="OpenStack" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/ovirt.png" alt="oVirt" />
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/rackspace.jpg" alt="Rackspace" /
+            >
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src="files/vsphere_logo.png" alt="VmWare vSphere" />
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <h2>Deployment Strategies</h2>
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Tools of trade</h3>
+            <ul>
+              <li>Git - versioning</li>
+              <li>Jenkins - CI</li>
+              <li>FPM - Packaging</li>
+              <li>Pulp - Repositories</li>
+              <li>MCollective / SSH - Some deployment strategy</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Git</h3>
+            <p>Puppet Modules as Git Submodules</p>
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Puppet</h3>
+            <pre><code>
+[puppet-inuits] master ± tree -L 2
+.
+├── manifests
+│   ├── classes
+│   ├── defaults
+│   ├── hosts
+│   └── site.pp
+├── modules
+│   ├── activemq
+│   ├── apache
+│   ├── apc
+│   ├── apt
+│   ├── augeas
+│   ├── bacula
+.....
+            </code></pre>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Git - Initial clone</h3>
+            <pre><code>
+              git clone ssh://.....git
+              git submodule update --init
+            </code></pre>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Git - Add submodule</h3>
+            <pre><code>
+              git submodule add ssh://.....git modules/&lt;name module&gt;
+              git add .gitmodules
+              git add module/&lt;name module&gt;
+              git commit -sm 'Add &lt;name module&gt;'
+              git push
+            </code></pre>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Git - Update</h3>
+            <pre><code>
+              git pull --rebase
+              git submodule update --init
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Git - tig</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/git.png' alt='Tig' />
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Jenkins</h3>
+            <ul>
+              <li>CI Server (Continuous Integration)</li>
+              <li>Open Source</li>
+              <li>Fork of Hudson</li>
+              <li>Lots of Plugins</li>
+              <li>Jobs</li>
+            </ul>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/jenkins.jpg' alt='Jenkins' />
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Pipelines</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/pipeline-puppet.png' alt='Puppet Pipeline' />
+            <br>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/pipeline-frontend.png' alt='Frontend Pipeline' />
+            <br>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/pipeline-backend.png' alt='Backend Pipeline' />
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Displaying Builds - zmon</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/zmon.png' alt='zmon' />
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Displaying Builds - ganbatte</h3>
+            <small><a href="http://github.com/kalmanolah/ganbatte">github: kalmanolah/ganbatte</a></small>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/ganbatte.png' alt='Ganbatte' />
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Promotions</h3>
+            <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/pipeline-promotion.png' alt='Puppet Promotion' />
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <ol>
+              <li class='fragment'>Code</li>
+              <li class='fragment'>Deploy to Infradev</li>
+              <li class='fragment'>Feedback (Foreman for Puppet, Icinga for services)</li>
+              <li class='fragment'>Correct Code if necessary and repeat from step 2</li>
+              <li class='fragment'>Promote to UAT and repeat step 3</li>
+              <li class='fragment'>Promote to Production Environments</li>
+            </ol>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Packaging</h3>
+            <p>fpm - Effing package managers! Build packages for multiple platforms (deb, rpm, etc) with great ease and sanity.</p>
+            <pre><code data-trim>
+fpm -s dir -t rpm \
+  --name "${PACKAGE_NAME}" \
+  --version "${PACKAGE_VERSION}" \
+  --iteration "${PACKAGE_ITERATION}" \
+  --architecture noarch \
+  --prefix /etc/puppet/environments/${environment}/ \
+  --vendor 'Inuits' \
+  --description 'Puppet Tree' \
+  --maintainer 'Jenkins' \
+  --epoch '1' \
+  -C ${WORKSPACE} .
+            </code></pre>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <p>Breakage on Infradev must result in predicatable breakage on UAT</p>
+            <p>Breakage on UAT must result in breakage in Production</p>
+            <p>Reality: not all envs are equal, but all possible tests should be run on Infradev</p>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Repositories</h3>
+            <ul>
+              <li>Pulp</li>
+              <li>
+                Add pkg:
+                <pre><code data-trim>
+pulp-admin rpm repo uploads rpm -f mypackage.rpm --repo-id=myrepo
+                </code></pre>
+              </li>
+              <li>
+                Rebuild metadata:
+                <pre><code data-trim>
+pulp-admin rpm repo publish run --repo-id=myrepo
+                </code></pre>
+              </li>
+            </ul>
+          </section>
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Repositories</h3>
+            <p>Strive to have staged repositories</p>
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Mcollective / SSH</h3>
+            <p>Invalidate pkg manager cache and trigger update</p>
+          </section>
+
+          <section>
+            <h2>Deployment Strategies</h2>
+            <h3>Mcollective</h3>
+            <ul>
+              <li>Framework to build server orchestration or parallel job execution systems</li>
+              <li>Queuing Technology (RabbitMQ, ActiveMQ, ...)</li>
+            </ul>
+            <pre><code data-trim>
+#Clean yum cache on node
+sudo /usr/bin/mco rpc package yum_clean mode=expire-cache -I ${mcollectivenode}
+#Trigger package update
+sudo /usr/bin/mco rpc -t 1200 package update package=${packagename} -I ${mcollectivenode}
+            </code></pre>
+          </section>
+
+        </section>
+
+				<section>
+					<h2>THE END</h2>
+          <img style='background-color: none; background: none; box-shadow: none; border: none;' src='files/happyworks.gif' alt='Happy Works' />
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+        slideNumber: true,
+        overview: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
